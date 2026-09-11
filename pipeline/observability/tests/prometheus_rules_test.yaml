@@ -1,0 +1,40 @@
+# AI Attribution Block: AI-assisted Prometheus promtool alert unit test suite.
+rule_files:
+  - ../prometheus-rules.yaml
+
+evaluation_interval: 1m
+
+tests:
+  # Test Case 1: Critical Error Budget Burn Rate triggers SEV1 alert
+  - interval: 1m
+    input_series:
+      - series: 'http_requests_total{job="forgepay-workload",status=~"5.."}'
+        values: '0+10x60'
+      - series: 'http_requests_total{job="forgepay-workload"}'
+        values: '0+100x60'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: CriticalErrorBudgetBurnRate
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              service: forgepay
+            exp_annotations:
+              summary: "Critical 14.4x error budget burn rate detected"
+
+  # Test Case 2: PostgreSQL Pool Saturation triggers Warning
+  - interval: 1m
+    input_series:
+      - series: 'hikaricp_active_connections{pool="ForgePayPool"}'
+        values: '48 48 49 49 50 50'
+      - series: 'hikaricp_max_connections{pool="ForgePayPool"}'
+        values: '50 50 50 50 50 50'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: DatabasePoolSaturated
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              component: database
+            exp_annotations:
+              summary: "Database connection pool utilization >= 90%"

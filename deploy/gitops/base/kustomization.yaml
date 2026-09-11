@@ -1,0 +1,11 @@
+# AI Attribution Block: AI-assisted Helm-to-Kustomize base; render with `kustomize build --enable-helm`.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: forgepay
+helmGlobals:
+  chartHome: ../../helm
+helmCharts:
+  - name: forgepay
+    releaseName: forgepay
+    namespace: forgepay
+    includeCRDs: false

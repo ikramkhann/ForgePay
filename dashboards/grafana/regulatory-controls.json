@@ -1,0 +1,18 @@
+{
+  "__inputs": [],
+  "annotations": { "list": [] },
+  "description": "AI Attribution Block: target regulatory observability dashboard; it is not PCI-DSS/RBI compliance evidence or an attestation.",
+  "editable": true,
+  "panels": [
+    { "title": "Telemetry redaction failures", "type": "stat", "targets": [{ "expr": "sum(increase(telemetry_redaction_failures_total[30d]))", "refId": "A" }] },
+    { "title": "Production verification evidence", "type": "table", "targets": [{ "expr": "sum by (environment, strategy, gate, outcome, release_digest) (increase(deployment_verification_total{environment=\"production\"}[30d]))", "refId": "A" }] },
+    { "title": "DORA deployment evidence", "type": "table", "targets": [{ "expr": "sum by (environment, outcome, release_digest) (increase(dora_deployment_total[30d]))", "refId": "A" }] },
+    { "title": "Audit log search", "type": "logs", "targets": [{ "datasource": { "type": "loki", "uid": "REPLACE_WITH_LOKI_DATASOURCE_UID" }, "expr": "{service=\"forgepay\",environment=\"production\"} | json | event_type=~\"deployment_verification|access_audit|redaction\"", "refId": "A" }] },
+    { "title": "Trace lookup", "type": "traces", "targets": [{ "datasource": { "type": "jaeger", "uid": "REPLACE_WITH_JAEGER_DATASOURCE_UID" }, "query": "service=forgepay", "refId": "A" }] }
+  ],
+  "schemaVersion": 39,
+  "tags": ["forgepay", "regulatory", "target"],
+  "title": "ForgePay Regulatory Controls (Target)",
+  "uid": "forgepay-regulatory-controls",
+  "version": 1
+}

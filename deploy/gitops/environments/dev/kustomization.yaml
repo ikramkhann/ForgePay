@@ -1,0 +1,14 @@
+# AI Attribution Block: AI-assisted development overlay; digest is populated by verified promotion only.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources: [../../base]
+images:
+  - name: REQUIRED_IMAGE_REFERENCE
+    newName: REQUIRED_IMAGE_REFERENCE
+    digest: sha256:REPLACE_WITH_VERIFIED_DIGEST
+patches:
+  - target: { group: argoproj.io, version: v1alpha1, kind: Rollout, name: forgepay }
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1

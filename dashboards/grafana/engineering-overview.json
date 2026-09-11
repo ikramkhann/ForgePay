@@ -1,0 +1,19 @@
+{
+  "__inputs": [],
+  "annotations": { "list": [] },
+  "description": "AI Attribution Block: target dashboard definition only; it contains no runtime data or achieved SLO claim.",
+  "editable": true,
+  "panels": [
+    { "title": "Availability SLI (30d)", "type": "stat", "targets": [{ "expr": "1 - (sum(increase(http_server_requests_total{service=\"forgepay\",status=~\"5..\"}[30d])) / sum(increase(http_server_requests_total{service=\"forgepay\"}[30d])))", "refId": "A" }] },
+    { "title": "HTTP 5xx rate (5m)", "type": "timeseries", "targets": [{ "expr": "sum(rate(http_server_requests_total{service=\"forgepay\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_total{service=\"forgepay\"}[5m]))", "refId": "A" }] },
+    { "title": "p99 request latency", "type": "timeseries", "targets": [{ "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_request_duration_seconds_bucket{service=\"forgepay\"}[5m])))", "refId": "A" }] },
+    { "title": "PostgreSQL pool utilisation", "type": "timeseries", "targets": [{ "expr": "db_connection_pool_active{service=\"forgepay\"} / db_connection_pool_max{service=\"forgepay\"}", "refId": "A" }] },
+    { "title": "Payment gateway timeout rate", "type": "timeseries", "targets": [{ "expr": "sum(rate(payment_gateway_requests_total{service=\"forgepay\",outcome=\"timeout\"}[5m])) / sum(rate(payment_gateway_requests_total{service=\"forgepay\"}[5m]))", "refId": "A" }] },
+    { "title": "Rollout phase", "type": "table", "targets": [{ "expr": "argo_rollouts_phase{rollout=\"forgepay\"}", "refId": "A" }] }
+  ],
+  "schemaVersion": 39,
+  "tags": ["forgepay", "engineering", "target"],
+  "title": "ForgePay Engineering Reliability (Target)",
+  "uid": "forgepay-engineering-reliability",
+  "version": 1
+}

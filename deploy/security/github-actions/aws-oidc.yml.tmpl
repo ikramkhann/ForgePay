@@ -1,0 +1,29 @@
+# AI Attribution Block: Reusable workflow template; it is intentionally not invoked until approved AWS values exist.
+name: AWS OIDC credential exchange template
+
+on:
+  workflow_call:
+    inputs:
+      aws_region:
+        required: true
+        type: string
+      role_to_assume:
+        description: Exact approved CI role ARN; do not use an administrator role.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  assume-approved-role:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exchange GitHub OIDC token for temporary AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ inputs.role_to_assume }}
+          aws-region: ${{ inputs.aws_region }}
+          role-session-name: forgepay-github-${{ github.run_id }}
+          role-duration-seconds: 900

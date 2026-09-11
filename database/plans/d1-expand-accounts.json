@@ -1,0 +1,38 @@
+{
+  "id": "d1-expand-accounts",
+  "phase": "expand",
+  "releaseDigest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "sourceRevision": "a1b2c3d4e5f67890abcdef1234567890abcdef12",
+  "compatibleApplications": [
+    "forgepay-service:1.0.0",
+    "forgepay-service:1.1.0"
+  ],
+  "preconditions": [
+    "PostgreSQL version 16 authoritative instance verified",
+    "Table accounts exists in target schema",
+    "Advisory lock forgepay_migration_lock acquired",
+    "No active contract phase or uncommitted schema changes"
+  ],
+  "lockSafety": {
+    "expectedLock": "AccessExclusiveLock held briefly for metadata-only nullable column addition",
+    "lockTimeout": "5s",
+    "statementTimeout": "30s",
+    "testedInRepresentativeEnvironment": true
+  },
+  "backfill": {
+    "required": false,
+    "strategy": "No immediate historical backfill required in expand phase; dual-write and batch backfill executed in phase d1-backfill-accounts"
+  },
+  "integrityValidation": [
+    "SELECT column_name, is_nullable, data_type FROM information_schema.columns WHERE table_name = 'accounts' AND column_name = 'account_status';",
+    "SELECT count(*) FROM accounts WHERE account_status IS NOT NULL;"
+  ],
+  "rollback": {
+    "applicationRollback": "Traffic aborts or rolls back to stable application version A0; A0 tolerates the presence of nullable column account_status without degradation",
+    "databaseRecoveryDecision": "Retain D1 schema; do not drop column or reverse DDL while production traffic is active; require database owner explicit review for forward-fix"
+  },
+  "approvals": [
+    "role:database-reliability-engineer",
+    "role:software-architect"
+  ]
+}

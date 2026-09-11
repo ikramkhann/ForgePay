@@ -1,0 +1,15 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "TrustOnlyForgePayServiceAccount",
+    "Effect": "Allow",
+    "Principal": {"Federated": "REPLACE_WITH_EKS_OIDC_PROVIDER_ARN"},
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Condition": {
+      "StringEquals": {
+        "REPLACE_WITH_EKS_OIDC_ISSUER:aud": "sts.amazonaws.com",
+        "REPLACE_WITH_EKS_OIDC_ISSUER:sub": "system:serviceaccount:forgepay:forgepay"
+      }
+    }
+  }]
+}

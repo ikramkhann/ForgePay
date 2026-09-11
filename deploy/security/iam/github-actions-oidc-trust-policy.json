@@ -1,0 +1,15 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "TrustOnlyApprovedGitHubEnvironmentWorkflow",
+    "Effect": "Allow",
+    "Principal": {"Federated": "REPLACE_WITH_GITHUB_OIDC_PROVIDER_ARN"},
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Condition": {
+      "StringEquals": {
+        "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+        "token.actions.githubusercontent.com:sub": "REPLACE_WITH_EXACT_GITHUB_SUBJECT"
+      }
+    }
+  }]
+}

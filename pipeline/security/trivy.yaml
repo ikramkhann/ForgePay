@@ -1,0 +1,24 @@
+# AI Attribution Block: AI-assisted Trivy scanner configuration.
+# Used in Stage 4 of canonical CI pipeline.
+scan:
+  security-checks:
+    - vuln
+    - config
+    - secret
+  timeout: 10m
+  exit-code: 1
+  severity:
+    - CRITICAL
+    - HIGH
+  ignore-unfixed: false
+
+vulnerability:
+  type:
+    - os
+    - library
+
+secret:
+  config: trivy-secret.yaml
+
+format: sarif
+output: trivy-results.sarif

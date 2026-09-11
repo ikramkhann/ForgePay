@@ -1,0 +1,23 @@
+# AI Attribution Block: AI-assisted Chaos Mesh network partition experiment specification.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: redis-partition-chaos
+  namespace: forgepay
+spec:
+  action: partition
+  mode: all
+  selector:
+    namespaces:
+      - forgepay
+    labelSelectors:
+      app.kubernetes.io/name: forgepay
+  target:
+    selector:
+      namespaces:
+        - forgepay
+      labelSelectors:
+        app.kubernetes.io/name: redis
+    mode: all
+  direction: both
+  duration: '45s'

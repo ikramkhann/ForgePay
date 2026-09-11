@@ -1,0 +1,10 @@
+{
+  "name": "mock-payment-gateway",
+  "version": "1.0.0",
+  "description": "Deterministic mock payment rail for ForgePay local and integration testing",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "UNLICENSED"
+}

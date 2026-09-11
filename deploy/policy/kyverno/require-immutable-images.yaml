@@ -1,0 +1,26 @@
+# AI Attribution Block
+# AI-assisted admission policy. Cluster administrators must apply and test it only after
+# configuring image registry scope and Cosign trust according to the IAM/security decisions.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: forgepay-require-image-digests
+  annotations:
+    policies.kyverno.io/title: Require immutable images for ForgePay
+    policies.kyverno.io/category: Supply Chain Security
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: require-digest-pinned-images
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [forgepay]
+      validate:
+        message: ForgePay workload images must be pinned by sha256 digest.
+        pattern:
+          spec:
+            containers:
+              - image: "*@sha256:*"

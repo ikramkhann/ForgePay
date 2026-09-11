@@ -1,0 +1,23 @@
+# AI Attribution Block
+# Template only: do not apply until the owning security/IAM phase sets the exact trusted
+# image references and Cosign keyless identity/KMS key. This avoids claiming a trust root.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: forgepay-verify-images-TEMPLATE-DO-NOT-APPLY
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: verify-signed-images
+      match:
+        any:
+          - resources: { kinds: [Pod], namespaces: [forgepay] }
+      verifyImages:
+        - imageReferences: ["REPLACE_WITH_TRUSTED_REGISTRY/REPLACE_WITH_REPOSITORY@sha256:*"]
+          failureAction: Enforce
+          verifyDigest: true
+          attestors:
+            - entries:
+                - keyless:
+                    issuer: https://token.actions.githubusercontent.com
+                    subject: REPLACE_WITH_GITHUB_ACTIONS_WORKFLOW_IDENTITY

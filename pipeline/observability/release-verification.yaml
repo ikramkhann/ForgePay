@@ -1,0 +1,26 @@
+# AI Attribution Block: target progressive-delivery criteria; no release has been verified by this file.
+apiVersion: forgepay.io/v1alpha1
+kind: ReleaseVerificationCriteria
+metadata:
+  name: forgepay-progressive-delivery
+spec:
+  service: forgepay
+  sourceOfTruth: prometheus
+  failClosedWhenTelemetryUnavailable: true
+  blueGreen:
+    prePromotion: { healthChecks: 2, intervalSeconds: 30, analysisWindowSeconds: 300 }
+    postPromotionObservationSeconds: 900
+  canary:
+    steps: [10, 25, 50, 100]
+    pauseSeconds: 120
+    analysisWindowSeconds: 300
+    postPromotionObservationSeconds: 900
+  rollback:
+    applicationOnly: true
+    thresholds:
+      - { name: http_5xx_rate, operator: gt, value: 0.05, windowSeconds: 300 }
+      - { name: request_p99_seconds, operator: gt, value: 0.3, windowSeconds: 300 }
+      - { name: postgres_pool_active_ratio, operator: gte, value: 0.9, windowSeconds: 300 }
+      - { name: postgres_pool_pending, operator: gt, value: 0, windowSeconds: 300 }
+      - { name: payment_gateway_timeout_rate, operator: gt, value: 0.1, windowSeconds: 300 }
+      - { name: readiness_or_synthetic_check, operator: failed, value: 1, windowSeconds: 60 }

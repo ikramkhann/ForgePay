@@ -1,0 +1,43 @@
+# AI Attribution Block
+# AI-assisted deployment-verification workflow. ArgoCD remains the deployer; this workflow is read-only.
+name: Verify ArgoCD GitOps deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      application:
+        description: Existing ArgoCD Application name for the promoted environment
+        required: true
+        type: string
+      argocd_server:
+        description: Existing ArgoCD API server URL
+        required: true
+        type: string
+  push:
+    branches: [main]
+    paths: [deploy/gitops/environments/**]
+
+permissions:
+  contents: read
+
+jobs:
+  deployment-with-verification:
+    name: "8. Deployment with verification (ArgoCD)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require explicit verification target on automatic runs
+        env:
+          APPLICATION: '${{ inputs.application || vars.ARGOCD_APPLICATION }}'
+          SERVER: '${{ inputs.argocd_server || vars.ARGOCD_SERVER }}'
+        run: |
+          test -n "$APPLICATION"
+          test -n "$SERVER"
+          echo "APPLICATION=$APPLICATION" >> "$GITHUB_ENV"
+          echo "SERVER=$SERVER" >> "$GITHUB_ENV"
+      - uses: clowdhaus/argo-cd-action@v2.2.5
+        with:
+          command: login ${{ env.SERVER }} --auth-token ${{ secrets.ARGOCD_AUTH_TOKEN }} --grpc-web
+      - name: Verify ArgoCD reconciliation and rollout health; no direct deployment
+        run: |
+          argocd app wait "$APPLICATION" --sync --health --operation --timeout 900
+          argocd app get "$APPLICATION" --show-operation

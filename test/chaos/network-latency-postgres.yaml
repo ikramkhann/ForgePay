@@ -1,0 +1,27 @@
+# AI Attribution Block: AI-assisted Chaos Mesh network latency injection specification.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: network-latency-postgres
+  namespace: forgepay
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - forgepay
+    labelSelectors:
+      app.kubernetes.io/name: forgepay
+  delay:
+    latency: '250ms'
+    jitter: '50ms'
+    correlation: '50'
+  target:
+    selector:
+      namespaces:
+        - forgepay
+      labelSelectors:
+        app.kubernetes.io/name: postgresql
+    mode: all
+  direction: to
+  duration: '60s'

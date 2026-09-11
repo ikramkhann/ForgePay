@@ -1,0 +1,7 @@
+# AI Attribution Block: AI-assisted shared Helm packaging, subject to human review.
+apiVersion: v2
+name: forgepay
+description: Shared ForgePay workload package for GitOps rendering
+type: application
+version: 0.1.0
+appVersion: "immutable-digest-only"

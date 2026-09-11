@@ -1,0 +1,38 @@
+# AI Attribution Block: AI-assisted Falco runtime detection rules for ForgePay banking workloads.
+- rule: Unauthorized Shell Execution in ForgePay Container
+  desc: Detect unexpected terminal shell spawned inside ForgePay core containers
+  condition: >
+    spawned_process and
+    container and
+    k8s.ns.name = "forgepay" and
+    proc.name in (bash, sh, zsh, ksh, csh)
+  output: >
+    Unauthorized shell spawned in container (user=%user.name container_id=%container.id
+    image=%container.image.repository pod=%k8s.pod.name command=%proc.cmdline)
+  priority: CRITICAL
+  tags: [security, pci-dss-v4, forgepay]
+
+- rule: Sensitive Cryptographic Key Access
+  desc: Detect unexpected read of private keys or TLS certificates outside startup phase
+  condition: >
+    open_read and
+    container and
+    k8s.ns.name = "forgepay" and
+    (fd.name startswith "/etc/ssl/certs" or fd.name startswith "/var/run/secrets") and
+    not proc.name in (java, keytool)
+  output: >
+    Unexpected process reading credentials or TLS materials (user=%user.name pod=%k8s.pod.name file=%fd.name command=%proc.cmdline)
+  priority: HIGH
+  tags: [security, compliance, rbi]
+
+- rule: Outbound Connection to Disallowed Port from Banking Pod
+  desc: Detect network traffic initiated to unapproved external ports
+  condition: >
+    outbound and
+    container and
+    k8s.ns.name = "forgepay" and
+    not fd.rport in (443, 5432, 6379, 5672)
+  output: >
+    Disallowed outbound connection from ForgePay pod (pod=%k8s.pod.name dest_ip=%fd.rip dest_port=%fd.rport)
+  priority: WARNING
+  tags: [security, network, pci-dss-v4]

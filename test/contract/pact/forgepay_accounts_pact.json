@@ -1,0 +1,70 @@
+{
+  "consumer": {
+    "name": "ForgePay-Core"
+  },
+  "provider": {
+    "name": "AccountsService"
+  },
+  "interactions": [
+    {
+      "description": "a request to get account balance by ID",
+      "providerState": "account ACC-1001 exists with balance 5000.00 INR",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/accounts/ACC-1001",
+        "headers": {
+          "Accept": "application/json",
+          "X-Correlation-ID": "corr-test-12345"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "accountId": "ACC-1001",
+          "currency": "INR",
+          "balance": 5000.00,
+          "status": "ACTIVE",
+          "updatedAt": "2026-09-11T10:00:00Z"
+        }
+      }
+    },
+    {
+      "description": "a request to hold funds for a payment authorization",
+      "providerState": "account ACC-1001 has sufficient balance for 250.00 INR hold",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/accounts/ACC-1001/holds",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Correlation-ID": "corr-test-12345"
+        },
+        "body": {
+          "amount": 250.00,
+          "currency": "INR",
+          "referenceId": "TX-9901-AUTH",
+          "reason": "PAYMENT_AUTHORIZATION"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "holdId": "HLD-8801",
+          "accountId": "ACC-1001",
+          "heldAmount": 250.00,
+          "status": "HELD"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "pactSpecification": {
+      "version": "3.0.0"
+    }
+  }
+}

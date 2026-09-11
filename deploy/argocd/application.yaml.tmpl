@@ -1,0 +1,24 @@
+# AI Attribution Block
+# This is an ArgoCD Application template, not a registered Application. Replace every
+# REPLACE_WITH value through approved environment/cluster provisioning; do not invent URLs or cluster IDs.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: forgepay-REPLACE_WITH_ENVIRONMENT
+  namespace: argocd
+spec:
+  project: forgepay-REPLACE_WITH_ENVIRONMENT
+  source:
+    repoURL: REPLACE_WITH_GITOPS_REPOSITORY_URL
+    targetRevision: main
+    path: deploy/gitops/environments/REPLACE_WITH_ENVIRONMENT
+    kustomize:
+      buildOptions: --enable-helm
+  destination:
+    server: REPLACE_WITH_REGISTERED_CLUSTER_SERVER
+    namespace: forgepay
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: false
+    syncOptions: [CreateNamespace=true]

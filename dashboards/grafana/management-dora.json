@@ -1,0 +1,19 @@
+{
+  "__inputs": [],
+  "annotations": { "list": [] },
+  "description": "AI Attribution Block: target DORA dashboard definition only; no performance outcome or deployment result is asserted.",
+  "editable": true,
+  "panels": [
+    { "title": "Deployment Frequency (30d)", "type": "stat", "targets": [{ "expr": "sum(increase(dora_deployment_total{environment=\"production\",outcome=\"verified\"}[30d]))", "refId": "A" }] },
+    { "title": "Lead Time p50", "type": "stat", "targets": [{ "expr": "histogram_quantile(0.50, sum by (le) (rate(dora_lead_time_seconds_bucket[30d])))", "refId": "A" }] },
+    { "title": "Change Failure Rate (30d)", "type": "stat", "targets": [{ "expr": "sum(increase(dora_deployment_total{environment=\"production\",outcome=~\"failed|rolled_back\"}[30d])) / sum(increase(dora_deployment_total{environment=\"production\"}[30d]))", "refId": "A" }] },
+    { "title": "Time to Restore p90", "type": "stat", "targets": [{ "expr": "histogram_quantile(0.90, sum by (le) (rate(dora_restore_time_seconds_bucket[30d])))", "refId": "A" }] },
+    { "title": "CI/CD stage reliability", "type": "table", "targets": [{ "expr": "sum by (stage, outcome) (increase(cicd_stage_runs_total[30d]))", "refId": "A" }] },
+    { "title": "Verification outcomes", "type": "table", "targets": [{ "expr": "sum by (environment, strategy, gate, outcome) (increase(deployment_verification_total[30d]))", "refId": "A" }] }
+  ],
+  "schemaVersion": 39,
+  "tags": ["forgepay", "management", "dora", "target"],
+  "title": "ForgePay Management DORA (Target)",
+  "uid": "forgepay-management-dora",
+  "version": 1
+}

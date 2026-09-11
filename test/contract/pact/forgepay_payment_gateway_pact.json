@@ -1,0 +1,45 @@
+{
+  "consumer": {
+    "name": "ForgePay-Core"
+  },
+  "provider": {
+    "name": "PaymentGateway-Rail"
+  },
+  "interactions": [
+    {
+      "description": "a request to process a card payment authorization",
+      "providerState": "gateway rail is operational and responds within 150ms",
+      "request": {
+        "method": "POST",
+        "path": "/v2/authorizations",
+        "headers": {
+          "Content-Type": "application/json",
+          "Idempotency-Key": "idem-key-9901-abcd"
+        },
+        "body": {
+          "paymentToken": "tok_sec_9948271048",
+          "amount": 1250.00,
+          "currency": "INR",
+          "merchantId": "MERCHANT-NOVA-01"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "gatewayReference": "GW-AUTH-887192",
+          "status": "APPROVED",
+          "authorizationCode": "AUTH-449102",
+          "timestamp": "2026-09-11T10:00:00Z"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "pactSpecification": {
+      "version": "3.0.0"
+    }
+  }
+}

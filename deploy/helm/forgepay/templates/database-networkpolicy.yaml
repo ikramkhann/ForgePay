@@ -1,0 +1,33 @@
+# AI Attribution Block: AI-assisted Kubernetes NetworkPolicy for PostgreSQL database isolation.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "forgepay.fullname" . }}-database-netpol
+  labels:
+    {{- include "forgepay.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgresql
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Only allow ingress from ForgePay core workload pods
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "forgepay.selectorLabels" . | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 5432
+  egress:
+    # Strict air-gap: only DNS permitted for clustering
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53

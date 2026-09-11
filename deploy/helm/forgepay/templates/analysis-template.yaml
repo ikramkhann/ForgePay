@@ -1,0 +1,62 @@
+# AI Attribution Block: AI-assisted target release analysis. Thresholds are configuration, not runtime evidence.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ include "forgepay.name" . }}-release-health
+  labels: {{- include "forgepay.labels" . | nindent 4 }}
+spec:
+  metrics:
+    - name: health-endpoint
+      interval: 30s
+      count: 2
+      failureLimit: 0
+      successCondition: result == 'UP'
+      provider:
+        web:
+          url: http://{{ include "forgepay.name" . }}-preview.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}/actuator/health
+          jsonPath: '{$.status}'
+    - name: http-5xx-rate
+      interval: {{ .Values.observability.releaseAnalysis.intervalSeconds }}s
+      count: {{ .Values.observability.releaseAnalysis.count }}
+      failureLimit: 0
+      successCondition: result <= {{ .Values.observability.releaseAnalysis.maxHttp5xxRate }}
+      provider:
+        prometheus:
+          address: {{ .Values.observability.prometheus.address | quote }}
+          query: sum(rate(http_server_requests_total{service="forgepay",status=~"5.."}[5m])) / sum(rate(http_server_requests_total{service="forgepay"}[5m]))
+    - name: request-p99-latency
+      interval: {{ .Values.observability.releaseAnalysis.intervalSeconds }}s
+      count: {{ .Values.observability.releaseAnalysis.count }}
+      failureLimit: 0
+      successCondition: result <= {{ .Values.observability.releaseAnalysis.maxP99LatencySeconds }}
+      provider:
+        prometheus:
+          address: {{ .Values.observability.prometheus.address | quote }}
+          query: histogram_quantile(0.99, sum by (le) (rate(http_server_request_duration_seconds_bucket{service="forgepay"}[5m])))
+    - name: postgres-pool-utilization
+      interval: {{ .Values.observability.releaseAnalysis.intervalSeconds }}s
+      count: {{ .Values.observability.releaseAnalysis.count }}
+      failureLimit: 0
+      successCondition: result < {{ .Values.observability.releaseAnalysis.maxPostgresPoolUtilization }}
+      provider:
+        prometheus:
+          address: {{ .Values.observability.prometheus.address | quote }}
+          query: max(db_connection_pool_active{service="forgepay"} / db_connection_pool_max{service="forgepay"})
+    - name: postgres-pool-pending
+      interval: {{ .Values.observability.releaseAnalysis.intervalSeconds }}s
+      count: {{ .Values.observability.releaseAnalysis.count }}
+      failureLimit: 0
+      successCondition: result <= 0
+      provider:
+        prometheus:
+          address: {{ .Values.observability.prometheus.address | quote }}
+          query: max(db_connection_pool_pending{service="forgepay"})
+    - name: payment-gateway-timeout-rate
+      interval: {{ .Values.observability.releaseAnalysis.intervalSeconds }}s
+      count: {{ .Values.observability.releaseAnalysis.count }}
+      failureLimit: 0
+      successCondition: result <= {{ .Values.observability.releaseAnalysis.maxPaymentGatewayTimeoutRate }}
+      provider:
+        prometheus:
+          address: {{ .Values.observability.prometheus.address | quote }}
+          query: sum(rate(payment_gateway_requests_total{service="forgepay",outcome="timeout"}[5m])) / sum(rate(payment_gateway_requests_total{service="forgepay"}[5m]))

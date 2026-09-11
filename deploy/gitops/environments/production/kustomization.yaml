@@ -1,0 +1,26 @@
+# AI Attribution Block: AI-assisted production overlay; uses canary and retains immutable digest promotion.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources: [../../base]
+images:
+  - name: REQUIRED_IMAGE_REFERENCE
+    newName: REQUIRED_IMAGE_REFERENCE
+    digest: sha256:REPLACE_WITH_VERIFIED_DIGEST
+patches:
+  - target: { group: argoproj.io, version: v1alpha1, kind: Rollout, name: forgepay }
+    patch: |-
+      - op: replace
+        path: /spec/strategy
+        value:
+          canary:
+            stableService: forgepay-active
+            canaryService: forgepay-preview
+            analysis: { templates: [{ templateName: forgepay-release-health }] }
+            steps:
+              - setWeight: 10
+              - pause: { duration: 2m }
+              - setWeight: 25
+              - pause: { duration: 2m }
+              - setWeight: 50
+              - pause: { duration: 2m }
+              - setWeight: 100

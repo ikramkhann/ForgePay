@@ -1,0 +1,5 @@
+# AI Attribution Block: Trivy ignore file for documented, mitigated exceptions.
+# Format: CVE-YYYY-NNNN # Justification & compensating control
+
+# Example: Low-severity documentation vulnerability with no patch available
+# CVE-2023-9999 # Justification: Evaluated by SecOps; internal doc only; zero exploitability in banking runtime.

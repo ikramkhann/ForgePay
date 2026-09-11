@@ -1,0 +1,27 @@
+# AI Attribution Block: Template only. Replace all values during approved ArgoCD provisioning; do not apply placeholders.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: forgepay-REPLACE_WITH_ENVIRONMENT
+  namespace: argocd
+spec:
+  description: Bounded ForgePay GitOps deployment project
+  sourceRepos:
+    - REPLACE_WITH_GITOPS_REPOSITORY_URL
+  destinations:
+    - namespace: forgepay
+      server: REPLACE_WITH_REGISTERED_CLUSTER_SERVER
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ServiceAccount
+    - group: argoproj.io
+      kind: Rollout
+    - group: argoproj.io
+      kind: AnalysisTemplate
+  roles:
+    - name: readonly
+      policies:
+        - p, proj:forgepay-REPLACE_WITH_ENVIRONMENT:readonly, applications, get, forgepay-REPLACE_WITH_ENVIRONMENT/*, allow

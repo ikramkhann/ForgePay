@@ -1,0 +1,40 @@
+# AI Attribution Block: AI-assisted progressive-delivery foundation; requires the Argo Rollouts controller.
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ include "forgepay.name" . }}
+  labels: {{- include "forgepay.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels: {{- include "forgepay.labels" . | nindent 6 }}
+  template:
+    {{- include "forgepay.pod" . | nindent 4 }}
+  strategy:
+    {{- if eq .Values.rollout.strategy "canary" }}
+    canary:
+      stableService: {{ include "forgepay.name" . }}-active
+      canaryService: {{ include "forgepay.name" . }}-preview
+      analysis:
+        templates: [{ templateName: {{ include "forgepay.name" . }}-release-health }]
+      steps:
+      {{- range .Values.rollout.canarySteps }}
+        - setWeight: {{ . }}
+        - pause: { duration: 2m }
+      {{- end }}
+    {{- else }}
+    blueGreen:
+      activeService: {{ include "forgepay.name" . }}-active
+      previewService: {{ include "forgepay.name" . }}-preview
+      autoPromotionEnabled: {{ .Values.rollout.autoPromotionEnabled }}
+      {{- if .Values.rollout.autoPromotionEnabled }}
+      autoPromotionSeconds: {{ .Values.rollout.autoPromotionSeconds }}
+      {{- end }}
+      prePromotionAnalysis:
+        templates: [{ templateName: {{ include "forgepay.name" . }}-release-health }]
+      postPromotionAnalysis:
+        templates: [{ templateName: {{ include "forgepay.name" . }}-release-health }]
+      scaleDownDelaySeconds: {{ .Values.rollout.scaleDownDelaySeconds }}
+      abortScaleDownDelaySeconds: {{ .Values.rollout.abortScaleDownDelaySeconds }}
+    {{- end }}

@@ -1,0 +1,24 @@
+# AI Attribution Block: AI-assisted Helm test hook verifying Spring Boot actuator health endpoint.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "forgepay.fullname" . }}-test-health"
+  labels:
+    {{- include "forgepay.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  containers:
+    - name: health-check
+      image: curlimages/curl:8.5.0
+      command: ['curl', '-fsS', 'http://{{ include "forgepay.name" . }}-active:{{ .Values.service.port }}/actuator/health']
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 10001
+        capabilities:
+          drop:
+            - ALL
+  restartPolicy: Never

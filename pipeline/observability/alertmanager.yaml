@@ -1,0 +1,27 @@
+# AI Attribution Block: target Alertmanager routing only; receivers and integrations are unresolved.
+global:
+  resolve_timeout: 5m
+route:
+  receiver: REPLACE_WITH_DEFAULT_RECEIVER
+  group_by: [alertname, service, environment]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers: [severity="critical"]
+      receiver: REPLACE_WITH_CRITICAL_ON_CALL_RECEIVER
+      repeat_interval: 30m
+    - matchers: [severity="high"]
+      receiver: REPLACE_WITH_HIGH_PRIORITY_RECEIVER
+      repeat_interval: 1h
+    - matchers: [severity="warning"]
+      receiver: REPLACE_WITH_WARNING_RECEIVER
+receivers:
+  - name: REPLACE_WITH_DEFAULT_RECEIVER
+  - name: REPLACE_WITH_CRITICAL_ON_CALL_RECEIVER
+  - name: REPLACE_WITH_HIGH_PRIORITY_RECEIVER
+  - name: REPLACE_WITH_WARNING_RECEIVER
+inhibit_rules:
+  - source_matchers: [severity="critical"]
+    target_matchers: [severity=~"warning|high"]
+    equal: [service, environment]

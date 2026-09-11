@@ -1,0 +1,30 @@
+# AI Attribution Block: AI-assisted defaults. Environment overlays must replace image.reference with a signed digest.
+nameOverride: forgepay
+namespace: forgepay
+image:
+  reference: REQUIRED_IMAGE_REFERENCE
+replicaCount: 2
+service:
+  port: 8080
+rollout:
+  strategy: blueGreen
+  # Argo Rollouts requires this explicit false value for a manual blue-green gate.
+  autoPromotionEnabled: false
+  autoPromotionSeconds: 120
+  canarySteps: [10, 25, 50, 100]
+  scaleDownDelaySeconds: 900
+  abortScaleDownDelaySeconds: 900
+observability:
+  prometheus:
+    # Replace through approved environment configuration; no endpoint is assumed here.
+    address: REPLACE_WITH_PROMETHEUS_URL
+  releaseAnalysis:
+    intervalSeconds: 30
+    count: 10
+    maxHttp5xxRate: 0.05
+    maxP99LatencySeconds: 0.3
+    maxPostgresPoolUtilization: 0.9
+    maxPaymentGatewayTimeoutRate: 0.1
+resources:
+  requests: { cpu: 250m, memory: 512Mi }
+  limits: { cpu: "1", memory: 1Gi }

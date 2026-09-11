@@ -1,0 +1,44 @@
+# AI Attribution Block: target OTel Collector configuration; endpoints, certificates and retention are unresolved.
+receivers:
+  otlp:
+    protocols:
+      grpc: {}
+      http: {}
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+  batch: {}
+  attributes/redact-sensitive:
+    actions:
+      - key: http.request.header.authorization
+        action: delete
+      - key: payment.card.pan
+        action: delete
+      - key: payment.card.cvv
+        action: delete
+      - key: payment.token
+        action: delete
+exporters:
+  prometheus:
+    endpoint: 0.0.0.0:8889
+  otlp/jaeger:
+    endpoint: REPLACE_WITH_JAEGER_OTLP_ENDPOINT:4317
+    tls:
+      insecure: false
+  loki:
+    endpoint: REPLACE_WITH_LOKI_PUSH_ENDPOINT
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [prometheus]
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, attributes/redact-sensitive, batch]
+      exporters: [otlp/jaeger]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, attributes/redact-sensitive, batch]
+      exporters: [loki]

@@ -1,0 +1,18 @@
+# AI Attribution Block: AI-assisted service definitions for Argo Rollouts traffic management.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "forgepay.name" . }}-active
+  labels: {{- include "forgepay.labels" . | nindent 4 }}
+spec:
+  selector: {{- include "forgepay.labels" . | nindent 4 }}
+  ports: [{ name: http, port: {{ .Values.service.port }}, targetPort: http }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "forgepay.name" . }}-preview
+  labels: {{- include "forgepay.labels" . | nindent 4 }}
+spec:
+  selector: {{- include "forgepay.labels" . | nindent 4 }}
+  ports: [{ name: http, port: {{ .Values.service.port }}, targetPort: http }]

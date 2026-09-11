@@ -1,0 +1,57 @@
+# AI Attribution Block
+# AI-assisted promotion workflow. It proposes a GitOps digest change; it does not deploy directly.
+name: Promote signed immutable artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Destination GitOps environment
+        required: true
+        type: choice
+        options: [dev, staging, production]
+      image:
+        description: Fully qualified image repository, without tag or digest
+        required: true
+        type: string
+      digest:
+        description: Immutable sha256 image digest
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  promote:
+    name: Propose GitOps promotion
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: sigstore/cosign-installer@v3.9.0
+      - name: Verify immutable digest and GitHub Actions provenance
+        run: |
+          [[ '${{ inputs.digest }}' =~ ^sha256:[a-f0-9]{64}$ ]]
+          cosign verify '${{ inputs.image }}@${{ inputs.digest }}' \
+            --certificate-identity-regexp "${{ github.server_url }}/${{ github.repository }}/.github/workflows/ci.yml@.*" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com
+      - name: Update only the destination digest
+        env: { IMAGE: '${{ inputs.image }}', DIGEST: '${{ inputs.digest }}', ENVIRONMENT: '${{ inputs.environment }}' }
+        run: |
+          bash deploy/scripts/set-image-digest.sh "$ENVIRONMENT" "$IMAGE" "$DIGEST"
+          git diff --check
+      - uses: instrumenta/conftest-action@master
+        with: { version: 0.57.0 }
+      - name: Confirm promoted overlay satisfies digest policy
+        run: conftest test --policy deploy/policy/opa deploy/gitops/environments/${{ inputs.environment }}
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          branch: promotion/${{ inputs.environment }}/${{ github.run_id }}
+          title: 'promote(${{ inputs.environment }}): ${{ inputs.digest }}'
+          commit-message: 'promote(${{ inputs.environment }}): ${{ inputs.digest }}'
+          body: |
+            Promotes a previously built, signed image digest. ArgoCD reconciles this reviewed desired-state change; this workflow never deploys to a cluster.
+          labels: promotion, gitops

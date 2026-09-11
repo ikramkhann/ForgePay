@@ -1,0 +1,61 @@
+# AI Attribution Block: target Prometheus rules; not evidence of scraped metrics or fired alerts.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: forgepay-reliability
+  namespace: forgepay
+  labels:
+    app.kubernetes.io/name: forgepay
+spec:
+  groups:
+    - name: forgepay.slo-and-release
+      rules:
+        - alert: ForgePayAvailabilityBudgetBurnCritical
+          expr: |
+            (sum(rate(http_server_requests_total{service="forgepay",status=~"5.."}[5m])) / sum(rate(http_server_requests_total{service="forgepay"}[5m])) > (0.00001 * 14.4))
+            and (sum(rate(http_server_requests_total{service="forgepay",status=~"5.."}[1h])) / sum(rate(http_server_requests_total{service="forgepay"}[1h])) > (0.00001 * 14.4))
+          for: 5m
+          labels: { severity: critical, service: forgepay, slo: availability }
+          annotations:
+            summary: "ForgePay five-nines budget is burning critically"
+            runbook_url: "runbooks/availability-error-budget.md"
+        - alert: ForgePayAvailabilityBudgetBurnWarning
+          expr: |
+            (sum(rate(http_server_requests_total{service="forgepay",status=~"5.."}[30m])) / sum(rate(http_server_requests_total{service="forgepay"}[30m])) > (0.00001 * 6))
+            and (sum(rate(http_server_requests_total{service="forgepay",status=~"5.."}[6h])) / sum(rate(http_server_requests_total{service="forgepay"}[6h])) > (0.00001 * 6))
+          for: 30m
+          labels: { severity: warning, service: forgepay, slo: availability }
+          annotations:
+            summary: "ForgePay five-nines budget is burning"
+            runbook_url: "runbooks/availability-error-budget.md"
+        - alert: ForgePayHttp5xxRateCritical
+          expr: sum(rate(http_server_requests_total{service="forgepay",status=~"5.."}[5m])) / sum(rate(http_server_requests_total{service="forgepay"}[5m])) > 0.05
+          for: 5m
+          labels: { severity: critical, service: forgepay }
+          annotations:
+            summary: "ForgePay HTTP 5xx rate exceeds 5%"
+            simulation_reference: "12% HTTP 500 rate is an drill simulation, not an observed event"
+            runbook_url: "runbooks/http-5xx-and-rollback.md"
+        - alert: ForgePayPostgresPoolExhaustionHigh
+          expr: (db_connection_pool_active{service="forgepay"} / db_connection_pool_max{service="forgepay"} >= 0.90) or (db_connection_pool_pending{service="forgepay"} > 0)
+          for: 5m
+          labels: { severity: high, service: forgepay }
+          annotations:
+            summary: "ForgePay PostgreSQL connection pool is exhausted or near exhaustion"
+            simulation_reference: "pool exhaustion is an drill simulation, not an observed event"
+            runbook_url: "runbooks/postgresql-pool-exhaustion.md"
+        - alert: ForgePayPaymentGatewayTimeoutCritical
+          expr: sum(rate(payment_gateway_requests_total{service="forgepay",outcome="timeout"}[5m])) / sum(rate(payment_gateway_requests_total{service="forgepay"}[5m])) > 0.10
+          for: 5m
+          labels: { severity: critical, service: forgepay }
+          annotations:
+            summary: "ForgePay payment gateway timeout rate exceeds 10%"
+            simulation_reference: "35% timeout rate is an drill simulation, not an observed event"
+            runbook_url: "runbooks/payment-gateway-timeout.md"
+        - alert: ForgePayLatencySloViolation
+          expr: histogram_quantile(0.99, sum by (le) (rate(http_server_request_duration_seconds_bucket{service="forgepay"}[5m]))) > 0.3
+          for: 5m
+          labels: { severity: high, service: forgepay }
+          annotations:
+            summary: "ForgePay p99 latency exceeds 300ms"
+            runbook_url: "runbooks/http-5xx-and-rollback.md"
