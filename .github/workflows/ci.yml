@@ -112,7 +112,7 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with: { name: release-metadata }
       - name: Install Syft, Trivy, and Cosign
-        uses: aquasecurity/setup-trivy@v0.2.3
+        uses: aquasecurity/setup-trivy@e07451d2e059ed86c2870430ea286b3a9e0bf241
       - uses: anchore/sbom-action/download-syft@v0.18.0
       - uses: sigstore/cosign-installer@v3.9.0
       - name: Scan source dependencies
