@@ -159,7 +159,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: '21'
+        with: { distribution: temurin, java-version: '21' }
       - name: Execute integration and Pact contract tests
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/forgepay_test
